@@ -1,3 +1,4 @@
+"use strict";
 // ==========================================================================
 // Project:   Markov
 // Copyright: ©2012 KCP Technologies, Inc.
@@ -26,7 +27,7 @@ function Slider( iID, iModel)
   this.kMaxTime = MarkovSettings.kAnimTime;
   this.kMinTime = 25;
   this.model = iModel;
-  this.paper = new Raphael(tSliderArea, tSliderArea.clientWidth, tSliderArea.clientHeight);;
+  this.paper = new Raphael(tSliderArea, tSliderArea.clientWidth, tSliderArea.clientHeight);
   this.rect = this.paper.rect( kInset, kRadius - kThickness / 2,
                                 tSliderArea.clientWidth - 2 * kInset, kThickness, kRounding)
     .attr({ fill: 'white', 'stroke': 'darkgray'});
@@ -71,17 +72,18 @@ Slider.prototype.setupDragging = function()
   var this_ = this,
       tCX = null;
 
-  function thumbDragStart( iX, iY, iEvent) {
-    tCX = this_.thumb.attr('cx')
+  function thumbDragStart() {
+    tCX = this_.thumb.attr('cx');
   }
 
-  function thumbDragMove( iDX, iDY, iX, iY, iEvent) {
+  function thumbDragMove( iDX) {
     this_.setModel( tCX + iDX);
   }
 
-  function thumbDragStop( iEvent) {
+  function thumbDragStop() {
     tCX = null;
     // Log speed as an integer 0 to 10 with 0 being slow and 10 being fast
+/*
       var logAction = function(){
           MarkovGame.model.codapPhone.call({
               action:'logAction',
@@ -90,14 +92,10 @@ Slider.prototype.setupDragging = function()
           });
       }.bind(this);
       logAction();
-    /*MarkovGame.model.dgApi.doCommand("logAction",
-                           {
-                             formatStr: "setSpeed: " +
-                                     JSON.stringify( { speed: 10 - Math.round(this_.model.animTime / 100)})
-                           });*/
+*/
   }
 
-  function clickRect( iEvent, iX, iY) {
+  function clickRect( iEvent, iX) {
     this_.setModel( iX - this_.offsetLeft);
   }
 

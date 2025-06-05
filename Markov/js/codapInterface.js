@@ -1,4 +1,4 @@
-// ==========================================================================
+   // ==========================================================================
 //  
 //  Author:   jsandoe
 //
@@ -16,7 +16,6 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 // ==========================================================================
-
 /**
  * This class is intended to provide an abstraction layer for managing
  * a CODAP Data Interactive's connection with CODAP. It is not required. It is
@@ -74,6 +73,7 @@
 
 /*global require, iframePhone, Promise, module */
 
+   "use strict";
 (function (global) {
 
     var iframePh = (typeof module !== 'undefined') ? require('Common/js/iframe-phone') : iframePhone;
@@ -113,23 +113,25 @@
      * initiated by the init method if CODAP was started from a previously saved
      * document.
      */
-    var interactiveState = {};
+    let interactiveState = {};
 
     /**
      * A list of subscribers to messages from CODAP
      * @param {[{actionSpec: {RegExp}, resourceSpec: {RegExp}, handler: {function}}]}
      */
-    var notificationSubscribers = [];
-    var nextNotificationIndex = 0;
+    let notificationSubscribers = [];
+    let nextNotificationIndex = 0;
 
     function matchResource(resourceName, resourceSpec) {
         return resourceSpec === '*' || resourceName === resourceSpec;
     }
 
+/*  Never used
     function emptyNotifications() {
         notificationSubscribers = [];
         nextNotificationIndex = 0;
     }
+*/
 
     function notificationHandler (request, callback) {
         console.log('DI Plugin notificationHandler: ' + JSON.stringify(request));

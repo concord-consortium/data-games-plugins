@@ -1,3 +1,4 @@
+"use strict";
 // ==========================================================================
 // Project:   Markov
 // Copyright: ©2012 KCP Technologies, Inc.
@@ -25,8 +26,7 @@ function MarkovView( iModel)
  */
 MarkovView.prototype.initialize = function()
 {
-  var tMS = MarkovSettings,
-      tState = {},
+  var tState = {},
       tGameArea = document.getElementById("gameArea" ),
       kFontSize = 12,
       this_ = this;
@@ -37,13 +37,13 @@ MarkovView.prototype.initialize = function()
       this_.model.sound = 'off';
       tSpeaker.removeClass('speaker_on');
       tSpeaker.addClass('speaker_off');
-      tSpeaker.attr('title', 'Sound is off. Click to turn on.')
+      tSpeaker.attr('title', 'Sound is off. Click to turn on.');
     }
     else {
       this_.model.sound = 'on';
       tSpeaker.removeClass('speaker_off');
       tSpeaker.addClass('speaker_on');
-      tSpeaker.attr('title', 'Sound is on. Click to turn off.')
+      tSpeaker.attr('title', 'Sound is on. Click to turn off.');
     }
   }
 
@@ -104,7 +104,7 @@ MarkovView.prototype.initialize = function()
   this.updateAll();
 
   // We fake an event to get the welcome state initiated
-  tState.newState = "welcome";
+  // tState.newState = "welcome";
   this.handleStateChange( tState);
 };
 
@@ -115,7 +115,6 @@ MarkovView.prototype.initialize = function()
  */
 MarkovView.prototype.handleStateChange = function( iEvent)
 {
-  var tSS = MarkovSettings;
   // A few things to take care of based on our prior state
   switch( iEvent.priorState) {
     case "levelsMode":
@@ -134,6 +133,7 @@ MarkovView.prototype.handleStateChange = function( iEvent)
   switch( iEvent.newState) {
     case "welcome":
       KCPCommon.setElementVisibility( "welcome_panel", true);
+      KCPCommon.setElementVisibility( "outercontrols", false);
       KCPCommon.setElementVisibility( "levels_panel", false);
       KCPCommon.setElementVisibility( "level_alert", false);
       KCPCommon.setElementVisibility( "gameArea", false);
@@ -184,9 +184,10 @@ MarkovView.prototype.handleStateChange = function( iEvent)
     case "levelsMode":
       KCPCommon.setElementVisibility( "level_alert", false);
       this.model.levelManager.configureLevelsPanel( this.model.level);
+      break;
     default:
   }
-}
+};
 
 /**
  * Modify the html based on our current state
@@ -206,7 +207,7 @@ MarkovView.prototype.handleTurnStateChange = function( iEvent)
       break;
     default:
   }
-}
+};
 
 /**
  * Modify the html based on our current state
@@ -216,7 +217,7 @@ MarkovView.prototype.handleAutoplayChange = function( iEvent)
   var tLabel = iEvent.state === 'on' ? 'Stop!' : 'Autoplay';
   document.getElementById('auto_button' ).innerHTML = tLabel;
   KCPCommon.setElementVisibility( 'button_cover', iEvent.state === 'on');
-}
+};
 
 /**
  * Controls visibility of button and slider
@@ -227,16 +228,16 @@ MarkovView.prototype.setAutoplayVisibility = function( iShow)
   KCPCommon.setElementVisibility('slider', iShow);
   if( !iShow)
     KCPCommon.setElementVisibility('button_cover', false);
-}
+};
 
 /**
  * Modify the html based on our current state
  */
 MarkovView.prototype.updateAll = function()
 {
-  document.getElementById("gameNum").innerHTML = this.model.gameNumber;
+  document.getElementById("gameNum").innerHTML = this.model.gameNumber || 1;
   document.getElementById("levelName").innerHTML = this.model.level.levelName;
-}
+};
 
 /**
  * Determine whether autoplay should show and ...
@@ -251,7 +252,7 @@ MarkovView.prototype.prepareForNextMove = function()
     this.arrow.attr('y', tPlacement[tAutoMove] ).show();
   else
     this.arrow.hide();
-}
+};
 
 /**
  * If we're playing, we may need to show/hide autoplay
@@ -260,7 +261,7 @@ MarkovView.prototype.handlefinishedEditing = function()
 {
   if( this.model.gameState === 'playing')
     this.prepareForNextMove();
-}
+};
 
 /**
  * Moves are 'R', 'P', or 'S'
@@ -355,7 +356,7 @@ MarkovView.prototype.makeMove = function( iYourMove, iMarMove)
     .setXY( tYourCenterX, tYourCenterY, 0)
     .fullScale( tAnimationTime / 8, moveToPlayArea);
   this.moveState = 'starting';
-}
+};
 
 /**
  *  User has made a next move before animation of previous move is complete.
@@ -391,7 +392,7 @@ MarkovView.prototype.abortMove = function() {
   this.moveState = 'ended';
   KCPCommon.switchSrc( this.markov, tStateMap[ this.dog.getState()]);
   this.model.endTurn( this.dog.getState());
-}
+};
 
 /**
  * Our model has detected that a new level has been unlocked. Notify the user.
@@ -401,7 +402,7 @@ MarkovView.prototype.handleLevelUnlocked = function( iEvent)
 {
   this.alert('Level Alert', 'Congratulations! You have unlocked level ' +
                                                       iEvent.levelName + '.');
-}
+};
 
 /**
  * Our model has detected that a new level has been unlocked. Notify the user.
@@ -410,15 +411,13 @@ MarkovView.prototype.handleLevelUnlocked = function( iEvent)
 MarkovView.prototype.handleLevelChanged = function()
 {
   this.alert('You\'re changing levels', 'You may want to press the \'Clear Data\' button.');
-}
+};
 
 /**
  * Show an alert dialog with the given title and text.
  */
 MarkovView.prototype.alert = function( iTitle, iText)
 {
-  var this_ = this;
-
   function closeAlert() {
     KCPCommon.setElementVisibility("level_alert", false);
     KCPCommon.setElementVisibility("cover", false);
@@ -429,5 +428,5 @@ MarkovView.prototype.alert = function( iTitle, iText)
   KCPCommon.setElementVisibility("level_alert", true);
   KCPCommon.setElementVisibility("cover", true);
   document.getElementById("OK_button").onclick = closeAlert;
-}
+};
 

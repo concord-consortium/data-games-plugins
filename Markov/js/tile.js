@@ -1,3 +1,4 @@
+"use strict";
 // ==========================================================================
 // Project:   Markov
 // Copyright: ©2012 KCP Technologies, Inc.
@@ -34,7 +35,7 @@ function Tile( iPaper, iColorMap)
   this.letter = this.paper.text( 0, 0, '')
       .attr({'font-size': this.kFontSize, fill: this.kLetterColor });
   this.set = this.paper.set().push( this.shadow, this.rect, this.letter);
-  this.set.attr('transform', 'S0')
+  this.set.attr('transform', 'S0');
 }
 
 /**
@@ -180,7 +181,7 @@ Tile.prototype.fade = function( iOpacity)
 {
   this.set.attr({'fill-opacity': iOpacity, 'stroke-opacity': iOpacity });
   return this;
-}
+};
 
 /**
  *  Animate tile to vanishingly small and then remove from paper
@@ -199,7 +200,7 @@ Tile.prototype.vanish = function( iTime)
 /**
  *  Animate tile to vanishingly small and then remove from paper
  */
-Tile.prototype.finishVanish = function( iTime)
+Tile.prototype.finishVanish = function()
 {
   this.set.stop();
   this.set.remove();
