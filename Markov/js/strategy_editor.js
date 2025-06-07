@@ -21,25 +21,24 @@ function StrategyEditor( iStrategy, iCallback)
   var this_ = this,
       tTileArea = document.getElementById( 'strategy_tiles');
 
-  function close() {
+  async function close() {
     KCPCommon.setElementVisibility('cover', false);
     KCPCommon.setElementVisibility('strategy_dialog', false);
     this_.paper.clear();
     this_.paper.remove();
     this_.paper = null;
     this_.callback.call();
-/*  Todo: reinstate when V3 can respond to `logAction`
-    var logAction = function(){
-      codapInterface.sendRequest({
-          action:'logAction',
-          args: {formatStr: "backToGame:" }
-      })
-    }.bind(this);
-      logAction();
-*/
+    await codapInterface.sendRequest({
+      "action": "notify",
+      "resource": "logMessage",
+      "values": {
+        "formatStr": "backToGame:",
+        "replaceArgs": []
+      }
+    });
   }
 
-  function clearStrategy() {
+  async function clearStrategy() {
     KCPCommon.keys( iStrategy ).forEach( function( iKey) {
       iStrategy[ iKey].move = '';
       iStrategy[ iKey].weight = 2;
@@ -55,15 +54,14 @@ function StrategyEditor( iStrategy, iCallback)
         iTile.weights.push( iTile.weights[0].clone().transform('...t' + ((1 + iTile.weights.length * 8)) + ' 0'));
       }
     });
-/*  Todo: reinstate when V3 can respond to `logAction`
-      var logAction = function(){
-        codapInterface.sendRequest({
-          action:'logAction',
-          args: {formatStr: "clearStrategy:" }
-        })
-      }.bind(this);
-      logAction();
-*/
+    await codapInterface.sendRequest({
+      "action": "notify",
+      "resource": "logMessage",
+      "values": {
+        "formatStr": "clearStrategy:",
+        "replaceArgs": []
+      }
+    });
   }
 
   this.strategy = iStrategy;
@@ -172,15 +170,14 @@ StrategyEditor.prototype.setupTiles = function() {
           tTile.moveBorder.attr({ x: tTiny.tile.attr('x'), y: tTiny.tile.attr('y')});
           this_.hint.text( textForHint());
           drawMessage();
-/*  Todo: reinstate when V3 can respond to `logAction`
-          var logAction = function(){
-            codapInterface.sendRequest({
-              action:'logAction',
-              args: {formatStr: "setTile: " + JSON.stringify( { prev2: tTile.prev2, to: tMove }) }
-            })
-          }.bind(this);
-            logAction();
-*/
+          codapInterface.sendRequest({
+            "action": "notify",
+            "resource": "logMessage",
+            "values": {
+              "formatStr": "setTile: " + JSON.stringify( { prev2: tTile.prev2, to: tMove }),
+              "replaceArgs": []
+            }
+          });
         }
       });
     }
@@ -290,7 +287,7 @@ StrategyEditor.prototype.setupTiles = function() {
       }
     }
 
-    function dragWtEnd() {
+    async function dragWtEnd() {
       if( this_.draggedWeight) {
         this_.draggedWeight.attr('cursor', '');
         if( this_.dragOverTile) {
@@ -302,15 +299,14 @@ StrategyEditor.prototype.setupTiles = function() {
           this_.draggedWeight.animate({ transform: 'T' + (tX + tWeightNum * 8) + ',' + tY}, 200, '<>');
           this_.dragOverTile.weightsCover.toFront();
           this_.dragOverTile.numWeights.attr('text', this_.dragOverTile.strat.weight);
-/*  Todo: reinstate when V3 can respond to `logAction`
-          var logAction = function(){
-            codapInterface.sendRequest({
-              action:'logAction',
-              args: {formatStr: "dragWeight: " + JSON.stringify( { from: tTile.prev2, to: this_.dragOverTile.prev2 }) }
-            })
-          }.bind(this);
-            logAction();
-*/
+          await codapInterface.sendRequest({
+            "action": "notify",
+            "resource": "logMessage",
+            "values": {
+              "formatStr": "dragWeight: " + JSON.stringify( { from: tTile.prev2, to: this_.dragOverTile.prev2 }),
+              "replaceArgs": []
+            }
+          });
         }
         else {
           this_.draggedWeight.animate({ transform: this_.dragSavedTransform }, 200, '<>');
