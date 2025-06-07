@@ -1,3 +1,4 @@
+"use strict";
 // ==========================================================================
 // Project:   Markov
 // Copyright: ©2012 KCP Technologies, Inc.
@@ -21,7 +22,7 @@ function Queue( iPaper, iModel)
   this.model = iModel;
   this.tiles = [];  // Most recent tiles have lowest indices
   this.kMax = 15;   // Only this many tiles get kept
-  this.layout = { queueX: 276, queueY: 230 }
+  this.layout = { queueX: 276, queueY: 230 };
   this.label = this.paper.text( this.layout.queueX + 8, this.layout.queueY - 18, 'Markov\'s previous moves')
     .attr({ 'text-anchor': 'end', 'font-size': 12 })
     .hide();

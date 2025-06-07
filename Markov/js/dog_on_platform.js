@@ -1,3 +1,4 @@
+"use strict";
 // ==========================================================================
 // Project:   Markov
 // Copyright: ©2012 KCP Technologies, Inc.
@@ -62,7 +63,7 @@ DogOnPlatform.prototype.reset = function() {
   this.dog.attr( this.srcs.normal );
   this.dog.attr({'transform': '' });
   this.incrementPosition( 0, 500);
-}
+};
 
 /**
  * Put Madeline back at the starting position
@@ -72,7 +73,7 @@ DogOnPlatform.prototype.setDogState = function( iState) {
     KCPCommon.switchSrc( this.dog, this.srcs[ iState]);
     this.dog_state = iState;
   }
-}
+};
 
 /**
  * Animate Madeline, the platform, and the pole by the given number of steps.
@@ -83,9 +84,9 @@ DogOnPlatform.prototype.incrementPosition = function( iSteps, iTime, iCompletion
       tFraction, tPoleTop, tHeight;
   this.position += iSteps;
   this.position = Math.max( 0, Math.min( this.layout.numPositions, this.position));  // Limit to top and bottom
-  tFraction = this.position / tLay.numPositions,
+  tFraction = this.position / tLay.numPositions;
   tPoleTop = tLay.poleTopAtExit +
-             (1 - tFraction) * ( tLay.poleBaseY - tLay.poleTopAtExit),
+             (1 - tFraction) * ( tLay.poleBaseY - tLay.poleTopAtExit);
   tHeight = tLay.poleBaseY - tPoleTop + tLay.poleBaseHeight / 2;
   this.pole.animate({ y: tPoleTop, height: tHeight }, iTime, tAnim);
   this.platform.animate({ y: tPoleTop - tLay.platformHeight + tLay.poleBaseHeight }, iTime, tAnim);
@@ -115,7 +116,7 @@ DogOnPlatform.prototype.incrementPosition = function( iSteps, iTime, iCompletion
     this.downSnd.play();
   else if( iSteps > 0 && this.model.sound === 'on')
     this.upSnd.play();
-}
+};
 
 /**
  * Instantly finish the animation
@@ -124,7 +125,7 @@ DogOnPlatform.prototype.abortIncrementPosition = function() {
   this.set.stop();
   this.dog.attr('opacity', 1);
   this.incrementPosition( 0, 0);
-}
+};
 
 /**
  *
@@ -138,7 +139,7 @@ DogOnPlatform.prototype.getState = function() {
     tResult = 'top';
 
   return tResult;
-}
+};
 
 /**
  * Madeline slinks away to the right.
@@ -161,7 +162,7 @@ DogOnPlatform.prototype.bottomAnimation = function() {
   }
 
   step1();
-}
+};
 
 /**
  * Madeline turns around and moves away, getting smaller
@@ -180,4 +181,4 @@ DogOnPlatform.prototype.topAnimation = function() {
   }
 
   KCPCommon.switchSrc( this.dog, this.srcs.exiting, step);
-}
+};
