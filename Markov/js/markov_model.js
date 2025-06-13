@@ -65,9 +65,9 @@ function MarkovModel()
 /* Called from index.html*/
 MarkovModel.prototype.initialize = async function()
 {
-  let interactiveState = codapInterface.getInteractiveState();    //  get stored state of any
+  let interactiveState = codapInterface.getInteractiveState();    //  get stored state, if any
 
-  // We create a dataset, if not already existing with the name "Game/Turns, a parent collection named "Games"
+  // We create a dataset, if not already existing with the name "Game/Turns", a parent collection named "Games"
   // and a child collection named "Turns"
   await codapHelper.createDataset({
        name: "Games/Turns",
@@ -631,7 +631,6 @@ MarkovModel.prototype.restoreGameState = function( iState) {
     if( iState.strategy)
       this.strategy = iState.strategy;
     if (this.gameNumber > 0) {
-      this.gameNumber; // Because it's about to be incremented
       this.changeGameState('playing');
       this.changeGameState('gameEnded');
     }

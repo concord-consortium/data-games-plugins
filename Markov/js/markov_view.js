@@ -102,10 +102,6 @@ MarkovView.prototype.initialize = function()
   this.moveState = 'finished';  // Needed to know what to abort
 
   this.updateAll();
-
-  // We fake an event to get the welcome state initiated
-  // tState.newState = "welcome";
-  this.handleStateChange( tState);
 };
 
 /**
