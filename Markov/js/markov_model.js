@@ -1,3 +1,4 @@
+"use strict";
 // ==========================================================================
 // Project:   Markov
 // Copyright: ©2012 KCP Technologies, Inc.
@@ -11,11 +12,8 @@
 
 /* codapPhone is initialized in index.html when game is initialized*/
 
-function MarkovModel(codapPhone, iDoAppCommandFunc)
+function MarkovModel()
 {
-  this.codapPhone = codapPhone;
-  //this.doAppCommandFunc = iDoAppCommandFunc;
-  
   this.eventDispatcher = new EventDispatcher();
   this.levelManager = new LevelManager( MarkovLevels, this, 'MarkovGame.model.handleLevelButton(event, ##);',
                                         this, this.isLevelEnabled);
@@ -65,74 +63,119 @@ function MarkovModel(codapPhone, iDoAppCommandFunc)
  * Inform DG about this game
  */
 /* Called from index.html*/
-MarkovModel.prototype.initialize = function()
+MarkovModel.prototype.initialize = async function()
 {
-    this.codapPhone.call({
-        action:'initGame',
-        args: {
-            name: "Markov",
-            version: "2.0",
-            dimensions: { width: 534, height: 303 },
-            collections: [
-                {
-                    name: "Games",
-                    attrs: [
-                        {"name": "game" , "type" : "numeric" , "precision" : 0, defaultMin: 1, defaultMax: 5, "description": "game number" } ,
-                        {"name": "turns" , "type" : "numeric" , "precision" : 0, defaultMin: 0, defaultMax: 10, "description": "number of turns in the game"   } ,
-                        {"name": "winner", "type" : "nominal", 'description': 'who won? You or Markov?' },
-                        {"name": "level", "type" : "nominal", 'description': 'what level of the game was played' }
-                    ],
-                    childAttrName: "Turn",
-                    defaults: {
-                        xAttr: "game",
-                        yAttr: "score"
-                    }
-                },
-                {
-                    name: "Turns",
-                    attrs: [
-                        { "name" : "turn" , "type" : "numeric" , "precision" : 0, defaultMin: 0, defaultMax: 10, "description": "the turn number in the game"   } ,
-                        { "name" : "markovs_move" , "type" : "nominal" , "description": "the move markov made this turn",
-                            colormap: { "R":'red', "P":'blue', "S":'green' }},
-                        { "name" : "your_move" , "type" : "nominal" , "description": "the move you made this turn",
-                            colormap: { "R":'red', "P":'blue', "S":'green' }},
-                        { "name" : "result" , "type" : "nominal" , "description": "did you win or lose this turn?"   } ,
-                        { "name" : "up_down" , "type" : "numeric" , "precision" : 0, defaultMin: -1, defaultMax: 1, "description": "the number of steps up or down Madeline moved"   } ,
-                        { "name" : "previous_2_markov_moves" , "type" : "nominal" , "description": "the two moves Markov made prior to this one"   }
-                    ],
-                    defaults: {
-                        xAttr: "previous_2_markov_moves",
-                        yAttr: "markovs_move"
-                    }
-                }
-            ]
-        }
-    }, function(){console.log("Initializing game")});
+  let interactiveState = codapInterface.getInteractiveState();    //  get stored state, if any
+
+  // We create a dataset, if not already existing with the name "Game/Turns", a parent collection named "Games"
+  // and a child collection named "Turns"
+  await codapHelper.createDataset({
+       name: "Games/Turns",
+       collections: [
+         {
+           name: "Games",
+           title: "Games",
+           attrs: [
+             {
+               "name": "game",
+               "type": "numeric",
+               "precision": 0,
+               defaultMin: 1,
+               defaultMax: 5,
+               "description": "game number"
+             },
+             {
+               "name": "turns",
+               "type": "numeric",
+               "precision": 0,
+               defaultMin: 0,
+               defaultMax: 10,
+               "description": "number of turns in the game"
+             },
+             { "name": "winner", "type": "categorical", 'description': 'who won? You or Markov?' },
+             { "name": "level", "type": "categorical", 'description': 'what level of the game was played' }
+           ],
+           defaults: {
+             xAttr: "game",
+             yAttr: "score"
+           }
+         },
+         {
+           name: "Turns",
+           title: "Turns",
+           parent: "Games",
+           attrs: [
+             {
+               "name": "turn",
+               "type": "numeric",
+               "precision": 0,
+               defaultMin: 0,
+               defaultMax: 10,
+               "description": "the turn number in the game"
+             },
+             {
+               "name": "markovs_move", "type": "categorical", "description": "the move markov made this turn",
+               colormap: { "R": 'red', "P": 'blue', "S": 'green' }
+             },
+             {
+               "name": "your_move", "type": "categorical", "description": "the move you made this turn",
+               colormap: { "R": 'red', "P": 'blue', "S": 'green' }
+             },
+             { "name": "result", "type": "categorical", "description": "(win|lose) you vs Markov?" },
+             {
+               "name": "up_down",
+               "type": "numeric",
+               precision: 0,
+               defaultMin: -1,
+               defaultMax: 1,
+               description: "(up|down) Madeline moved this turn?"
+             },
+             {
+               "name": "previous_2_markov_moves",
+               type: "categorical",
+               "description": "the two moves Markov made prior to this one"
+             }
+           ],
+           defaults: {
+             xAttr: "previous_2_markov_moves",
+             yAttr: "markovs_move"
+           }
+         }
+       ],
+       type: 'DG.GameContext',
+     });
+  notificatons.registerForDocumentChanges();
+  if (interactiveState) {
+    this.restoreGameState(interactiveState);
+  }
 };
 
 /**
  * If we don't already have an open game case, open one now.
  */
 /* Called by playGame(), and addTurnCase() in this model*/
-MarkovModel.prototype.openNewGameCase = function()
+MarkovModel.prototype.openNewGameCase = async function()
 {
   if( !this.openGameCase) {
-    this.codapPhone.call({
-        action:'openCase',
-        args:{
-            collection: "Games",
-            values:[this.gameNumber, '', '', this.level.levelName]
+    await codapInterface.sendRequest({
+      action: 'create',
+      resource: "dataContext[Games/Turns].collection[Games].case",
+      values: [
+        {
+          values: {
+            game: this.gameNumber,
+            turns: 0,
+            winner: '',
+            level: this.level.levelName
+          }
         }
-    }, function(result){
-        if(result && result.success){
-            this.openGameCase = result.caseID;
-            this.changeGameState( 'playing'); // Our view will update
-            this.changeTurnState('waiting');
-
-            console.log("I have caseID" + result.caseID);
-        } else {
-            console.log("Markov: Error calling 'openCase': " + JSON.stringify(result));
-        }
+      ]
+    }).then(function(iResult) {
+      if(iResult.success) {
+        this.openGameCase = iResult.values[0].id;
+      } else {
+        console.log("Markov: Error creating new game case");
+      }
     }.bind(this));
   }
 };
@@ -141,33 +184,52 @@ MarkovModel.prototype.openNewGameCase = function()
  * Pass DG the values for the turn that just got completed
  */
 /* Called by endTurn() in this model */
-MarkovModel.prototype.addTurnCase = function()
+MarkovModel.prototype.addTurnCase = async function()
 {
-  //this.eventDispatcher.dispatchEvent( new Event( "scoreChange"));
-  this.openNewGameCase(); // Does nothing if already open
+  var values =  {
+    turn: this.turn,
+    markovs_move: this.marMove,
+    your_move: this.yourMove,
+    result: this.result,
+    up_down: this.up_down,
+    previous_2_markov_moves: (this.turn > 2) ? this.mar_prev_2 : ''
+  };
 
-  // Create the new Turn case
-    var createCase = function(){
-        this.codapPhone.call({
-            action: "createCase",
-            args: {
-                collection:"Turns",
-                parent: this.openGameCase,
-                values:
-                    [
-                        this.turn,
-                        this.marMove,
-                        this.yourMove,
-                        this.result,
-                        this.up_down,
-                        (this.turn > 2) ? this.mar_prev_2 : ''
-                    ]
-            }
-        });
-
-    }.bind(this);
-    createCase();
-
+  if (this.turn === 1) {
+    // Update the existing case
+    // First get the case ID of the already created first turn
+    var iResult = await codapInterface.sendRequest({
+      action: 'get',
+      resource: 'dataContext[Games/Turns].collection[Games].caseByID[' + this.openGameCase + ']'
+    });
+    if (iResult.success) {
+      var idOfFirstTurnCase = iResult.values.case.children[0];
+      // Update the existing case with the new values
+      await codapInterface.sendRequest({
+        action: 'update',
+        resource: "dataContext[Games/Turns].collection[Turns].caseByID[" + idOfFirstTurnCase + "]",
+        values: {
+          values: values
+        }
+      });
+    } else {
+      console.log("Markov: Error finding existing turn case");
+      return; // Cannot proceed without a case ID
+    }
+  }
+  else {
+    // Create the new Turn case
+    await codapInterface.sendRequest({
+      action: "create",
+      resource: `dataContext[Games/Turns].collection[Turns].case`,
+      values: [
+        {
+          parent: this.openGameCase,
+          values: values
+        }
+      ],
+    });
+  }
 };
 
 /**
@@ -175,24 +237,23 @@ MarkovModel.prototype.addTurnCase = function()
  * Stash relevant values for the level and check to see if any levels are newly unlocked.
  */
 /* Called by endGame() in this model*/
-MarkovModel.prototype.addGameCase = function()
+MarkovModel.prototype.addGameCase = async function()
 {
   var this_ = this;
-  this.codapPhone.call({
-      action:'closeCase',
-      args: {
-          collection: "Games",
-          caseID: this.openGameCase,
-          values:
-              [
-                  this.gameNumber,
-                  this.turn,
-                  this.winner,
-                  this.level.levelName
-              ]
+  var iResult = await codapInterface.sendRequest({
+    action: 'update',
+    resource: `dataContext[Games/Turns].collection[Games].caseByID[${this.openGameCase}]`,
+    values: {
+      values: {
+        turns: this.turn,
+        winner: this.winner,
+        level: this.level.levelName
       }
+    }
   });
-
+  if(!iResult.success) {
+    console.log("Markov: Error updating game case");
+  }
   this.openGameCase = null;
 
   if( !this.level.scores)
@@ -215,7 +276,7 @@ MarkovModel.prototype.addGameCase = function()
  * Prepare for the new game that is beginning.
  */
 /*playGame is called from index.html as an onclick event on the Play game button*/
-MarkovModel.prototype.playGame = function()
+MarkovModel.prototype.playGame = async function()
 {
   this.gameNumber++;
   this.turn = 0;
@@ -223,8 +284,9 @@ MarkovModel.prototype.playGame = function()
   // this.mar_prev_2 = '';  We don't re-initialize so last two moves of previous game apply to new game
   this.winner = '';
 
-  this.openNewGameCase(); //codapPhone event
-
+  await this.openNewGameCase();
+  this.changeGameState('playing');
+  this.updateInteractiveState();
 };
 
 /**
@@ -392,14 +454,14 @@ MarkovModel.prototype.handleStrategyButton = function()
   tEvent.state = 'off';
   this.eventDispatcher.dispatchEvent( tEvent);
   var strategyEditor = new StrategyEditor( this.strategy, finishedEditing );
-  var logAction = function(){
-        MarkovGame.model.codapPhone.call({
-            action:'logAction',
-            args:{formatStr: "setStrategy:"}
-        });
-    }.bind(this);
-    logAction();
-
+  codapInterface.sendRequest({
+    action: 'notify',
+    resource: 'logMessage',
+    values: {
+      formatStr: "setStrategy:"
+    }
+  });
+  this.updateInteractiveState();
 };
 
 /**
@@ -413,13 +475,13 @@ MarkovModel.prototype.handleAutoButton = function()
   this.eventDispatcher.dispatchEvent( tEvent);
   if( this.autoplay)
     this.autoplay = this.autoTurn();
-  var logAction = function(){
-      MarkovGame.model.codapPhone.call({
-          action:'logAction',
-          args:{formatStr: "autoPlay: " + JSON.stringify( { state: tEvent.state})}
-      });
-  }.bind(this);
-    logAction();
+  codapInterface.sendRequest({
+    action: 'notify',
+    resource: 'logMessage',
+    values: {
+      formatStr: "autoPlay: " + JSON.stringify( { state: tEvent.state})
+    }
+  });
 };
 
 /**
@@ -487,6 +549,7 @@ MarkovModel.prototype.handleLevelButton = function( iEvent, iLevelIndex)
       this.eventDispatcher.dispatchEvent( new Event( "firstTimeLevelChanged"));
     }
   }
+  this.updateInteractiveState();
 };
 
 /**
@@ -540,22 +603,20 @@ MarkovModel.prototype.isLevelEnabled = function( iLevelSpec)
   is saved so that the user need not unlock levels again, for instance.
   @returns  {Object}    { success: {Boolean}, state: {Object} }
  */
-MarkovModel.prototype.saveGameState = function() {
-  return {
-            success: true,
-            state: {
-              gameNumber: this.gameNumber,
-              currentLevel: this.level && this.level.levelName,
-              levelsMap: this.levelManager.getLevelsLockState(),
-              strategy: this.strategy
-            }
-          };
+MarkovModel.prototype.updateInteractiveState = function() {
+  var currentInteractiveState =  {
+    gameNumber: this.gameNumber,
+    currentLevel: this.level && this.level.levelName,
+    levelsMap: this.levelManager.getLevelsLockState(),
+    strategy: this.strategy
+  };
+  codapInterface.updateInteractiveState(currentInteractiveState);
 };
 
 /**
   Restores the game state for the game. Currently, only level information
   is saved so that the user need not unlock levels again, for instance.
-  @param    {Object}    iState -- The state as saved previously by saveGameState().
+  @param    {Object}    iState -- The state as saved previously by updateInteractiveState().
  */
 MarkovModel.prototype.restoreGameState = function( iState) {
   if( iState) {
@@ -569,7 +630,10 @@ MarkovModel.prototype.restoreGameState = function( iState) {
       this.levelManager.setLevelsLockState( iState.levelsMap);
     if( iState.strategy)
       this.strategy = iState.strategy;
-    this.playGame();
+    if (this.gameNumber > 0) {
+      this.changeGameState('playing');
+      this.changeGameState('gameEnded');
+    }
   }
   return { success: true };
 };

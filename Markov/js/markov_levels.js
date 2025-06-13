@@ -1,4 +1,5 @@
-MarkovLevels = [
+"use strict";
+let MarkovLevels = [
   {
     "levelName" : "Tethys",
     "startingLevel" : true,

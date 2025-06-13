@@ -2,6 +2,7 @@
 // Project:   Markov
 // Copyright: ©2012 KCP Technologies, Inc.
 // ==========================================================================
+"use strict";
 
 /**
  * @fileoverview Defines StrategyEditor - Brings up an interface with which user can set a strategy
@@ -20,23 +21,24 @@ function StrategyEditor( iStrategy, iCallback)
   var this_ = this,
       tTileArea = document.getElementById( 'strategy_tiles');
 
-  function close() {
-    KCPCommon.setElementVisibility('cover', false)
-    KCPCommon.setElementVisibility('strategy_dialog', false)
+  async function close() {
+    KCPCommon.setElementVisibility('cover', false);
+    KCPCommon.setElementVisibility('strategy_dialog', false);
     this_.paper.clear();
     this_.paper.remove();
     this_.paper = null;
     this_.callback.call();
-    var logAction = function(){
-      codapInterface.sendRequest({
-          action:'logAction',
-          args: {formatStr: "backToGame:" }
-      })
-    }.bind(this);
-      logAction();
+    await codapInterface.sendRequest({
+      "action": "notify",
+      "resource": "logMessage",
+      "values": {
+        "formatStr": "backToGame:",
+        "replaceArgs": []
+      }
+    });
   }
 
-  function clearStrategy() {
+  async function clearStrategy() {
     KCPCommon.keys( iStrategy ).forEach( function( iKey) {
       iStrategy[ iKey].move = '';
       iStrategy[ iKey].weight = 2;
@@ -52,17 +54,14 @@ function StrategyEditor( iStrategy, iCallback)
         iTile.weights.push( iTile.weights[0].clone().transform('...t' + ((1 + iTile.weights.length * 8)) + ' 0'));
       }
     });
-      var logAction = function(){
-        codapInterface.sendRequest({
-          action:'logAction',
-          args: {formatStr: "clearStrategy:" }
-        })
-      }.bind(this);
-      logAction();
-    /*MarkovGame.model.dgApi.doCommand("logAction",
-                                          {
-                                            formatStr: "clearStrategy:"
-                                          });*/
+    await codapInterface.sendRequest({
+      "action": "notify",
+      "resource": "logMessage",
+      "values": {
+        "formatStr": "clearStrategy:",
+        "replaceArgs": []
+      }
+    });
   }
 
   this.strategy = iStrategy;
@@ -75,10 +74,10 @@ function StrategyEditor( iStrategy, iCallback)
   this.kNormalFill = '#555466';
   this.kHoverFill = '#AAAA84';
   this.kStratFill = '#9DBB95';
-  this.kTranslucent = 'rgba(0,0,0,0.001)'
+  this.kTranslucent = 'rgba(0,0,0,0.001)';
 
-  KCPCommon.setElementVisibility('strategy_dialog', true)
-  KCPCommon.setElementVisibility('cover', true)
+  KCPCommon.setElementVisibility('strategy_dialog', true);
+  KCPCommon.setElementVisibility('cover', true);
   document.getElementById('back_to_game' ).onclick = close;
   document.getElementById('strat_clear' ).onclick = clearStrategy;
 
@@ -94,7 +93,7 @@ StrategyEditor.prototype.forEachTile = function( iFunction) {
         return;
     }
   }
-}
+};
 
 /**
  * There are nine tiles, one for each possible pair of Markov's previous two moves.
@@ -135,7 +134,7 @@ StrategyEditor.prototype.setupTiles = function() {
                   iPrev2 + '.';
       }
       else {
-            tResult = 'When Markov\'s previous 2 moves are ' + iPrev2 + ', your move will be ' + tMove + '.'
+            tResult = 'When Markov\'s previous 2 moves are ' + iPrev2 + ', your move will be ' + tMove + '.';
       }
       return tResult;
     }
@@ -171,18 +170,14 @@ StrategyEditor.prototype.setupTiles = function() {
           tTile.moveBorder.attr({ x: tTiny.tile.attr('x'), y: tTiny.tile.attr('y')});
           this_.hint.text( textForHint());
           drawMessage();
-          var logAction = function(){
-            codapInterface.sendRequest({
-              action:'logAction',
-              args: {formatStr: "setTile: " + JSON.stringify( { prev2: tTile.prev2, to: tMove }) }
-            })
-          }.bind(this);
-            logAction();
-          /*MarkovGame.model.dgApi.doCommand("logAction",
-                                 {
-                                   formatStr: "setTile: " +
-                                           JSON.stringify( { prev2: tTile.prev2, to: tMove })
-                                 });*/
+          codapInterface.sendRequest({
+            "action": "notify",
+            "resource": "logMessage",
+            "values": {
+              "formatStr": "setTile: " + JSON.stringify( { prev2: tTile.prev2, to: tMove }),
+              "replaceArgs": []
+            }
+          });
         }
       });
     }
@@ -225,7 +220,7 @@ StrategyEditor.prototype.setupTiles = function() {
       if( tTile.weights)
         tTile.weights.remove();
       tPaper.setStart();
-      for( i = 0; i < tNumWeights; i++) {
+      for( let i = 0; i < tNumWeights; i++) {
         tProtoWeight.clone().attr({ transform: 'T' + (tX + i * 8) + ',' + tY});
       }
       tTile.weights = tPaper.setFinish();
@@ -267,7 +262,7 @@ StrategyEditor.prototype.setupTiles = function() {
       }
     }
 
-    function dragWtMove( iDX, iDY, iX, iY, iEvent ) {
+    function dragWtMove( iDX, iDY, iX, iY) {
       if( this_.draggedWeight) {
         var tSavedTile = this_.dragOverTile,
             // Transform given window coordinates to paper coordinates. Constants are empirically determined.
@@ -292,7 +287,7 @@ StrategyEditor.prototype.setupTiles = function() {
       }
     }
 
-    function dragWtEnd() {
+    async function dragWtEnd() {
       if( this_.draggedWeight) {
         this_.draggedWeight.attr('cursor', '');
         if( this_.dragOverTile) {
@@ -304,18 +299,14 @@ StrategyEditor.prototype.setupTiles = function() {
           this_.draggedWeight.animate({ transform: 'T' + (tX + tWeightNum * 8) + ',' + tY}, 200, '<>');
           this_.dragOverTile.weightsCover.toFront();
           this_.dragOverTile.numWeights.attr('text', this_.dragOverTile.strat.weight);
-          var logAction = function(){
-            codapInterface.sendRequest({
-              action:'logAction',
-              args: {formatStr: "dragWeight: " + JSON.stringify( { from: tTile.prev2, to: this_.dragOverTile.prev2 }) }
-            })
-          }.bind(this);
-            logAction();
-          /*MarkovGame.model.dgApi.doCommand("logAction",
-                                 {
-                                   formatStr: "dragWeight: " +
-                                              JSON.stringify( { from: tTile.prev2, to: this_.dragOverTile.prev2 })
-                                 });*/
+          await codapInterface.sendRequest({
+            "action": "notify",
+            "resource": "logMessage",
+            "values": {
+              "formatStr": "dragWeight: " + JSON.stringify( { from: tTile.prev2, to: this_.dragOverTile.prev2 }),
+              "replaceArgs": []
+            }
+          });
         }
         else {
           this_.draggedWeight.animate({ transform: this_.dragSavedTransform }, 200, '<>');
@@ -369,4 +360,4 @@ StrategyEditor.prototype.setupTiles = function() {
   tProtoLetter.remove();
   tProtoBorder.remove();
   tProtoWeight.remove();
-}
+};
