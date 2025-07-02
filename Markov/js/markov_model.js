@@ -69,81 +69,88 @@ MarkovModel.prototype.initialize = async function()
 
   // We create a dataset, if not already existing with the name "Game/Turns", a parent collection named "Games"
   // and a child collection named "Turns"
-  await codapHelper.createDataset({
-       name: "Games/Turns",
-       collections: [
-         {
-           name: "Games",
-           title: "Games",
-           attrs: [
-             {
-               "name": "game",
-               "type": "numeric",
-               "precision": 0,
-               defaultMin: 1,
-               defaultMax: 5,
-               "description": "game number"
-             },
-             {
-               "name": "turns",
-               "type": "numeric",
-               "precision": 0,
-               defaultMin: 0,
-               defaultMax: 10,
-               "description": "number of turns in the game"
-             },
-             { "name": "winner", "type": "categorical", 'description': 'who won? You or Markov?' },
-             { "name": "level", "type": "categorical", 'description': 'what level of the game was played' }
-           ],
-           defaults: {
-             xAttr: "game",
-             yAttr: "score"
-           }
-         },
-         {
-           name: "Turns",
-           title: "Turns",
-           parent: "Games",
-           attrs: [
-             {
-               "name": "turn",
-               "type": "numeric",
-               "precision": 0,
-               defaultMin: 0,
-               defaultMax: 10,
-               "description": "the turn number in the game"
-             },
-             {
-               "name": "markovs_move", "type": "categorical", "description": "the move markov made this turn",
-               colormap: { "R": 'red', "P": 'blue', "S": 'green' }
-             },
-             {
-               "name": "your_move", "type": "categorical", "description": "the move you made this turn",
-               colormap: { "R": 'red', "P": 'blue', "S": 'green' }
-             },
-             { "name": "result", "type": "categorical", "description": "(win|lose) you vs Markov?" },
-             {
-               "name": "up_down",
-               "type": "numeric",
-               precision: 0,
-               defaultMin: -1,
-               defaultMax: 1,
-               description: "(up|down) Madeline moved this turn?"
-             },
-             {
-               "name": "previous_2_markov_moves",
-               type: "categorical",
-               "description": "the two moves Markov made prior to this one"
-             }
-           ],
-           defaults: {
-             xAttr: "previous_2_markov_moves",
-             yAttr: "markovs_move"
-           }
-         }
-       ],
-       type: 'DG.GameContext',
-     });
+  const iResult = await codapInterface.sendRequest({
+    action: 'get',
+    resource: 'dataContextList'
+  });
+  if (iResult.success && !iResult.values.some(ds => ds.name === "Games/Turns")) {
+    await codapHelper.createDataset({
+      name: "Games/Turns",
+      collections: [
+        {
+          name: "Games",
+          title: "Games",
+          attrs: [
+            {
+              "name": "game",
+              "type": "numeric",
+              "precision": 0,
+              defaultMin: 1,
+              defaultMax: 5,
+              "description": "game number"
+            },
+            {
+              "name": "turns",
+              "type": "numeric",
+              "precision": 0,
+              defaultMin: 0,
+              defaultMax: 10,
+              "description": "number of turns in the game"
+            },
+            { "name": "winner", "type": "categorical", 'description': 'who won? You or Markov?' },
+            { "name": "level", "type": "categorical", 'description': 'what level of the game was played' }
+          ],
+          defaults: {
+            xAttr: "game",
+            yAttr: "score"
+          }
+        },
+        {
+          name: "Turns",
+          title: "Turns",
+          parent: "Games",
+          attrs: [
+            {
+              "name": "turn",
+              "type": "numeric",
+              "precision": 0,
+              defaultMin: 0,
+              defaultMax: 10,
+              "description": "the turn number in the game"
+            },
+            {
+              "name": "markovs_move", "type": "categorical", "description": "the move markov made this turn",
+              colormap: { "R": 'red', "P": 'blue', "S": 'green' }
+            },
+            {
+              "name": "your_move", "type": "categorical", "description": "the move you made this turn",
+              colormap: { "R": 'red', "P": 'blue', "S": 'green' }
+            },
+            { "name": "result", "type": "categorical", "description": "(win|lose) you vs Markov?" },
+            {
+              "name": "up_down",
+              "type": "numeric",
+              precision: 0,
+              defaultMin: -1,
+              defaultMax: 1,
+              description: "(up|down) Madeline moved this turn?"
+            },
+            {
+              "name": "previous_2_markov_moves",
+              type: "categorical",
+              "description": "the two moves Markov made prior to this one"
+            }
+          ],
+          defaults: {
+            xAttr: "previous_2_markov_moves",
+            yAttr: "markovs_move"
+          }
+        }
+      ],
+      type: 'DG.GameContext',
+    });
+  }
+
   notificatons.registerForDocumentChanges();
   if (interactiveState) {
     this.restoreGameState(interactiveState);
