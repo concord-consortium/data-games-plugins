@@ -73,7 +73,8 @@ MarkovModel.prototype.initialize = async function()
     action: 'get',
     resource: 'dataContextList'
   });
-  if (iResult.success && !iResult.values.some(ds => ds.name === "Games/Turns")) {
+  // It can happen that an existing dataset has "Games/Turns" as either its name or title, so we check both.
+  if (iResult.success && !iResult.values.some(ds => [ds.name, ds.title].includes("Games/Turns"))) {
     await codapHelper.createDataset({
       name: "Games/Turns",
       collections: [
